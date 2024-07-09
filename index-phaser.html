@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>test page</title>
+  <link rel="stylesheet" href="../../css/reset.css">
+
+  <!-- https://greensock.com/docs/v3/Installation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.3/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.3/ScrollTrigger.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/phaser@3.51.0/dist/phaser.js"></script>
+
+  <style>
+    #background {
+      background-color: #8FBC8F;
+      position: fixed;
+      width: 100vw;
+      height: 100vh;
+      top: 0;
+      left: 0;
+      z-index: -2;
+    }
+
+    #canvas {
+      position: fixed;
+      top: 0;
+      z-index: -1;
+    }
+
+    #domContent {
+      z-index: 1;
+    }
+
+    button {
+      background-color: #008CBA;
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+    }
+
+    .text {
+      background-color: rgba(72, 122, 180, 0.8);
+      border-radius: 3px;
+      width: 50%;
+    }
+    
+    .dialog {
+      background-color: black;
+      border-radius: 3px;
+      color: whitesmoke;
+    }
+  </style>
+</head>
+
+<body style="overflow-x: hidden;">
+  <div id="background"></div>
+  <canvas id="canvas"></canvas>
+  <div id="domContent">
+
+    <div data-state="0" id="one" style="height: 100vh;">
+      <p class="text" style="position: relative; top: 50%;">
+        Scroll down!
+      </p>
+    </div>
+
+    <div data-state="1" id="one" style="height: 100vh;">
+      <p class="text" style="position: relative; top: 50%;">
+        This guy looks like he is in the zone and didn't notice you enter.
+      </p>
+    </div>
+    <div data-state="2" id="two" style="height: 100vh;">
+      <p class="text">
+        Better remind him that moving around and stretching is an important part of taking care of the body, especially
+        when your work is done at a desk.
+      </p>
+    </div>
+    <p>some other text</p>
+      
+    <!-- <iframe style="visibility: hidden; width: 100%; height: 100%;" class="iframeFull" src=""></iframe> -->
+  </div>
+
+  <script type="text/javascript">
+    var config = {
+      type: Phaser.CANVAS,
+      canvas: document.getElementById("canvas"),
+      transparent: true,
+      pixelArt: true,
+      scale: {
+        mode: Phaser.Scale.RESIZE
+      },
+      scene: {
+        preload: preload,
+        create: create
+      }
+    };
+
+    var scene = new Phaser.Game(config);
+
+    function preload() {
+      // sprites
+      this.load.spritesheet('coffee', 'assets/phaser/coffee.png', { frameWidth: 28, frameHeight: 58 });
+      this.load.spritesheet('computer', 'assets/phaser/computer.png', { frameWidth: 46, frameHeight: 38 });
+      this.load.spritesheet('props', 'assets/phaser/props.png', { frameWidth: 83, frameHeight: 128 }); // these should be broke out into individual images (no animation)
+      this.load.spritesheet('run', 'assets/phaser/run.png', { frameWidth: 63, frameHeight: 71 }); // this should be named jon and contain all the actions he can do
+
+      // images
+      this.load.image('table', 'assets/phaser/table.png');
+    }
+
+    function create() {
+      const { width, height } = this.sys.game.canvas;
+
+      // Declare textures: https://newdocs.phaser.io/docs/3.52.0/Phaser.Textures.Texture      
+      const smallShelf = this.add.sprite(width - 264, height / 2, 'props', 0);
+      const bigShelf = this.add.image(width - 364, height / 2, 'props', 1);
+      const table = this.add.image(664, 350, 'table');
+      const run = this.add.sprite(666, 386, 'run');
+      const computer = this.add.sprite(675, 320, 'computer');
+      const coffee = this.add.sprite(643, 325, 'coffee').setScale(.8);
+      const chair = this.add.image(664, 400, 'props', 2);
+
+      // Declare animations
+      this.anims.create({
+        key: 'coffee',
+        frames: this.anims.generateFrameNumbers('coffee', { frames: [0, 1, 2, 3, 4, 5] }),
+        frameRate: 3,
+        repeat: -1
+      });
+
+      this.anims.create({
+        // can you use a spread operator?
+        key: 'computer-typing',
+        frames: this.anims.generateFrameNumbers('computer', { frames: [0, 1, 2, 3, 4, 5] }),
+        frameRate: 2,
+        repeat: -1
+      });
+
+      this.anims.create({
+        key: 'computer-sleep',
+        frames: this.anims.generateFrameNumbers('computer', { frames: [0] }),
+        frameRate: 2,
+        repeat: -1
+      });
+
+      this.anims.create({
+        key: 'run-left',
+        frames: this.anims.generateFrameNumbers('run', { frames: [2, 3, 4, 5, 6, 7, 8] }),
+        frameRate: 4,
+        repeat: -1
+      });
+
+      this.anims.create({
+        key: 'run-ready',
+        frames: this.anims.generateFrameNumbers('run', { frames: [0] }),
+        frameRate: 1,
+        repeat: 0
+      });
+
+      this.anims.create({
+        // does this initial state really need to be an anim?
+        key: 'run-init',
+        frames: this.anims.generateFrameNumbers('run', { frames: [1] }),
+        frameRate: 1,
+        repeat: 0
+      });
+
+      // set initial states
+      coffee.anims.play('coffee', coffee);
+      computer.anims.play('computer-typing', computer);
+      run.anims.play('run-init', run)
+
+      gsap.to(run, {
+        scrollTrigger: {
+          trigger: "#two",
+          start: "top top",
+          scrub: true, //makes animation finish before continuing to scroll.
+          pin: true
+        },
+        x: table.x - 130,
+        // duration: 1.5,
+        onStart: () => {
+          computer.anims.play('computer-sleep', computer);
+          run.anims.play('run-left', run)
+        },
+        onComplete: () => {
+          run.anims.play('run-ready', run)
+          this.add.text(100, 100,'Hello World', { fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif' })
+        }
+      });
+
+      // https://blog.ourcade.co/posts/2020/dom-element-button-phaser-3-typescript-rxjs-jsx/
+      // interface.addListener('click').on('click', (event) => {
+      //   // add logic to return if no state
+      //   const state = event.target.dataset.state
+      //   console.log(typeof state)
+      //   const selection = event.target.dataset.selection
+      //   const action = `${state}|${selection}`
+      //   // const currentElement = document.querySelector(`div[data-state=${state}]`)
+      //   const currentElement = document.querySelector(`div[data-state="${state}"]`)
+      //   const nextElement = document.querySelector(`div[data-state="${Number(currentElement.dataset.state) + 1}"]`)
+
+      //   switch (action) {
+      //     case "1|yes":
+      //       
+      //       currentElement.style.display = "none";
+      //       // need to make this a dialog that the dude speaks
+      //       nextElement.style.display = "flex";
+      //       break;
+      //     default:
+      //       console.log("nope:", action)
+      //       break;
+      //   }
+      // });
+    }
+  </script>
+</body>
+
+</html>

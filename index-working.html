@@ -1,0 +1,126 @@
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Babylon Template</title>
+
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.3/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.3/ScrollTrigger.min.js"></script>
+  <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+</head>
+
+<body>
+  <canvas id="bjsCanvas" width="500" height="500" style="position: fixed; z-index: -1;"></canvas>
+  <div style="position: relative; top: 500px;">
+    <p style="height: 30vh; background-color: coral;"></p>
+    <p style="height: 30vh; background-color: cornflowerblue;"></p>
+    <p style="height: 30vh; background-color: darkolivegreen;"></p>
+    <p style="height: 30vh; background-color: darkmagenta;"></p>
+  </div>
+
+  <script id="babylon">
+    const myScene = {
+      engine: null,
+      scene: null,
+      createScene(canvas) {
+        return new Promise((resolve, reject) => {
+          const engine = new BABYLON.Engine(canvas);
+          const scene = new BABYLON.Scene(engine);
+          this.engine = engine
+          this.scene = scene
+
+          // // Parameters : name, position, scene
+          const camera = new BABYLON.UniversalCamera("UniversalCamera", new BABYLON.Vector3(0, 0, -10), scene);
+          // Targets the camera to a particular position. In this case the scene origin
+          camera.setTarget(BABYLON.Vector3.Zero());
+
+          // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
+          var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+          // Default intensity is 1. Let's dim the light a small amount
+          light.intensity = 0.0;
+
+          const spriteManagerTable = new BABYLON.SpriteManager('tableSprites', 'assets/phaser/table.png', 1, { width: 68, height: 86 });
+          const spriteManagerComputer = new BABYLON.SpriteManager('computerSprites', 'assets/phaser/computer.png', 1, { width: 46, height: 38 });
+          const spriteManagerCoffee = new BABYLON.SpriteManager('coffeeSprites', 'assets/phaser/coffee.png', 1, { width: 28, height: 58 });
+          const spriteManagerDude = new BABYLON.SpriteManager('dudeSprites', 'assets/phaser/run.png', 1, { width: 63, height: 71 });
+          const spriteManagerChair = new BABYLON.SpriteManager('chairSprites', 'assets/phaser/chair.png', 1, { width: 42, height: 56 });
+
+          const table = new BABYLON.Sprite("table", spriteManagerTable);
+          table.width = 68 / 20;
+          table.height = 86 / 20;
+          table.position = new BABYLON.Vector3(0, 0, 0.05);
+          table.cellIndex = 0;
+
+          const computer = new BABYLON.Sprite("computer", spriteManagerComputer);
+          computer.width = 46 / 20;
+          computer.height = 38 / 20;
+          computer.position = new BABYLON.Vector3(0.4, 1.3, 0.04);
+          computer.cellIndex = 0;
+          computer.playAnimation(0, 10, true, 600);
+
+          const coffee = new BABYLON.Sprite("coffee", spriteManagerCoffee);
+          coffee.width = 28 / 35;
+          coffee.height = 58 / 35;
+          coffee.position = new BABYLON.Vector3(-1.1, .8, 0.03);
+          coffee.cellIndex = 0;
+          coffee.playAnimation(0, 5, true, 500);
+
+          const dude = new BABYLON.Sprite("dude", spriteManagerDude);
+          dude.width = 63 / 22;
+          dude.height = 71 / 22;
+          dude.position = new BABYLON.Vector3(0, -1.5, 0);
+          dude.cellIndex = 0;
+
+          const chair = new BABYLON.Sprite("chair", spriteManagerChair);
+          chair.width = 42 / 23;
+          chair.height = 56 / 23;
+          chair.position = new BABYLON.Vector3(0, -2, -0.01);
+          chair.cellIndex = 0;
+
+          engine.runRenderLoop(() => {
+            scene.render();
+          });
+        });
+      },
+      // use TS!!!
+
+      findSprite(name) {
+        if (this.scene.spriteManagers.find(element => element.name == name).sprites.length > 1) {
+          throw new Error("there is more than one sprite in this manager which has not been accounted for")
+          console.error(`${e.name}: ${e.message}`);
+        }
+
+        // assuming there is only one sprite attached per spriteManager
+        return this.scene.spriteManagers.find(element => element.name == name).sprites[0]
+      },
+      async positionSprite(name, from, to, speed) {
+        return new Promise((resolve, reject) => {
+          const sprite = this.findSprite(name) ? this.findSprite(name) : reject(error)
+
+          sprite.position.x += 5
+          resolve();
+        });
+      },
+      async startSpriteAnimation(name) {
+        const sprite = this.findSprite(name) ? this.findSprite(name) : reject(error)
+      },
+      async stopSpriteAnimation(name) {
+        const sprite = this.findSprite(name) ? this.findSprite(name) : reject(error)
+      },
+    };
+    // Try this form of messaging the babylon library from external libraries: https://doc.babylonjs.com/communityExtensions/Babylon.js+ExternalLibraries/BabylonJS_and_Vue/BabylonJS_and_Vue_4
+  </script>
+  <script id="gsap">
+    gsap.to("p", { y: "+=200px" })
+
+    async function positionSprite() {
+      await myScene.positionSprite("coffeeSprites", 3, 3, 100);
+    }
+
+    if (document.getElementById("bjsCanvas")) {
+      myScene.createScene(bjsCanvas);
+    }
+
+    positionSprite()
+  </script>
+</body>

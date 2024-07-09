@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Babylon Template</title>
+
+  <style>
+    html,
+    body {
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    #renderCanvas {
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+  </style>
+
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+  <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+</head>
+
+<body>
+  <canvas id="renderCanvas" touch-action="none"></canvas>
+  <!-- touch-action="none" for best results from PEP -->
+
+  <script>
+    var moveSpeed = 0.0002;
+    var runLeftActive = false;
+    var runRightActive = false;
+
+    // Activate runLeft animation
+    var modifyRunLeft = (scene, dude, myAnim) => {
+      if (!runLeftActive) {
+        // runLeftActive = true;
+        // dude.position.x += 0.1
+        // dude.cellIndex = 4
+        // console.log("running")
+        // setTimeout(() => {
+        //   runLeftActive = false;
+        // }, 100);
+
+        setTimeout(async () => {
+          // const anim = scene.beginAnimation(shield, 0, 90, false);
+          myAnim.restart();
+
+          // await myAnim.waitAsync();
+          // shieldActive = false;
+        });
+      }
+    }
+
+    const canvas = document.getElementById("renderCanvas"); // Get the canvas element
+    const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
+
+    // Add your code here matching the playground format
+    const createScene = function () {
+      const scene = new BABYLON.Scene(engine);
+
+
+      const spriteManagerDude = new BABYLON.SpriteManager("dudes", "assets/phaser/run.png", 1, { width: 63, height: 71 });
+      const dude = new BABYLON.Sprite("dude", spriteManagerDude);
+      dude.position = new BABYLON.Vector3(0, 0, 0);
+      dude.cellIndex = 0;
+      let deltaDirection
+
+      const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 2.5, 15, new BABYLON.Vector3(0, 0, 0));
+      const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0));
+
+
+      new BABYLON.DeviceSourceManager(scene.getEngine()).onDeviceConnectedObservable.add(deviceSource => {
+        if (deviceSource.deviceType === BABYLON.DeviceType.Mouse || deviceSource.deviceType === BABYLON.DeviceType.Touch) {
+          deviceSource.onInputChangedObservable.add(eventData => {
+            if (eventData.inputIndex === BABYLON.PointerInput.MouseWheelY) {
+              if (eventData.deltaY >= 0) {
+                deltaDirection = "down";
+              } else {
+                deltaDirection = "up";
+              }
+            }
+          });
+        }
+      })
+
+      const frameRate = 60;
+
+      const xSlide = new BABYLON.Animation("xSlide", "position.x", frameRate, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+      const keyFrames = [];
+      keyFrames.push({
+        frame: 1,
+        value: 0
+      });
+      keyFrames.push({
+        frame: 60,
+        value: 0.1
+      });
+
+      keyFrames.push({
+        frame: 120,
+        value: 5
+      });
+      xSlide.setKeys(keyFrames);
+
+      const cellIndex = new BABYLON.Animation("cellIndex", "cellIndex", frameRate, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+      const keyFrames2 = [];
+      keyFrames2.push({
+        frame: 1,
+        value: 0
+      });
+      keyFrames2.push({
+        frame: 2,
+        value: 9
+      });
+
+      keyFrames2.push({
+        frame: 60,
+        value: 10
+      });
+
+      cellIndex.setKeys(keyFrames2);
+
+      const nextAnimation = function () {
+        scene.beginDirectAnimation(dude, [xSlide], 0, 2 * frameRate, true);
+      };
+
+      const myAnim = scene.beginDirectAnimation(dude, [cellIndex], 1, 60, false, 1, nextAnimation)
+      myAnim.pause();
+
+
+      // myAnimatable.onAnimationEndObservable.add(function () {});
+      // myAnimatable.onAnimationLoopObservable.add(function (myAnimatable) {});
+
+      // const dsm = new BABYLON.DeviceSourceManager(engine);
+      scene.registerBeforeRender(function () {
+        if (deltaDirection) {
+          myAnim.restart()
+          console.log(myAnim.currentFrame)
+          deltaDirection = undefined
+          // modifyRunLeft(scene, dude, myAnim)
+        } else {
+          myAnim.pause()
+        }
+        // if (dsm.getDeviceSource(BABYLON.DeviceType.Mouse).getInput(8) == 1) {
+        // if (dsm.getDeviceSource(BABYLON.DeviceType.Keyboard).getInput(90) == 1) {
+        // console.log("mouse!!!")
+        // currentColor = new BABYLON.Color3(1, 0.5, 0.5);
+        // modifyShield(scene, ship);
+        // changeShipColors(ship, currentColor);
+        // controlsText.color = "red";
+        // controlsText.text = "Pilot Controls\nShield: Z\nFire: Spacebar\nBoost: X";
+        // }
+      });
+
+
+      return scene;
+    };
+
+    const scene = createScene(); //Call the createScene function
+
+    // Register a render loop to repeatedly render the scene
+    engine.runRenderLoop(function () {
+      scene.render();
+    });
+
+    // Watch for browser/canvas resize events
+    window.addEventListener("resize", function () {
+      engine.resize();
+    });
+  </script>
+</body>
+
+</html>
